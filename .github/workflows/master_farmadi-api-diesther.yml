@@ -1,65 +1,74 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy ASP.Net Core app to Azure Web App - farmadi-api-diesther
+name: CI/CD - FarmaDi API en Azure
 
 on:
   push:
     branches:
-      - 'master'
+      - master
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AZURE_WEBAPP_NAME: farmadi-api-diesther
+  PROJECT_PATH: FarmaDiApi/FarmaDiApi.csproj
+  DOTNET_VERSION: '8.0.x'
 
 jobs:
   build:
     runs-on: windows-latest
-    permissions:
-      contents: read #This is required for actions/checkout
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Descargar codigo de GitHub
+        uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Instalar .NET 8
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+      - name: Restaurar dependencias
+        run: dotnet restore "${{ env.PROJECT_PATH }}"
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+      - name: Compilar FarmaDi
+        run: dotnet build "${{ env.PROJECT_PATH }}" --configuration Release --no-restore
 
-      - name: Upload artifact for deployment job
+      - name: Publicar FarmaDiApi
+        run: dotnet publish "${{ env.PROJECT_PATH }}" --configuration Release --no-build --output "${{ github.workspace }}/publish"
+
+      - name: Subir archivos compilados
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: farmadi-api
+          path: ${{ github.workspace }}/publish
+          if-no-files-found: error
 
   deploy:
     runs-on: windows-latest
     needs: build
+
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Descargar archivos compilados
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
-      
-      - name: Login to Azure
+          name: farmadi-api
+          path: ./publish
+
+      - name: Iniciar sesion en Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_724FDB606DE849F8A000D6A5FDBBD7BF }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F2EB8C96DC5044F1BEB1FA8B87DE67BA }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_FD7D17877A944E859C15D2649F15305E }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
+      - name: Desplegar FarmaDi en Azure
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'farmadi-api-diesther'
-          slot-name: 'Production'
-          package: .
-          
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          slot-name: Production
+          package: ./publish
