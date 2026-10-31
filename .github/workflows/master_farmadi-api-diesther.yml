@@ -62,9 +62,9 @@ jobs:
       - name: Iniciar sesion en Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_724FDB606DE849F8A000D6A5FDBBD7BF }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F2EB8C96DC5044F1BEB1FA8B87DE67BA }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CA0C26742A3242BFA7F1623092C50960 }}
 
       - name: Desplegar FarmaDi en Azure
         uses: azure/webapps-deploy@v3
