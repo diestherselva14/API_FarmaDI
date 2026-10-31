@@ -1,4 +1,7 @@
 using FarmaDi.DataAccess.Repositories;
+using FarmaDiApi.Configurations;
+using FarmaDiApi.Middlewares;
+using FarmaDiApi.Services;
 using FarmaDiBusiness.Interfaces;
 using FarmaDiBusiness.Services;
 using FarmaDiDataAccess.Interfaces;
@@ -77,7 +80,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.Configure<MongoLogSettings>(
+    builder.Configuration.GetSection("MongoLogSettings"));
 
+builder.Services.AddSingleton<ILogService, MongoLogService>();
 
 
 
@@ -156,6 +162,8 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseCors("PermitirFrontend");
+
+app.UseMiddleware<AuditLoggingMiddleware>();
 
 app.UseAuthorization();
 
