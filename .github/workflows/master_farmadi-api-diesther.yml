@@ -17,10 +17,11 @@ env:
 
 jobs:
   build:
+    name: Compilar FarmaDi
     runs-on: windows-latest
 
     steps:
-      - name: Descargar codigo de GitHub
+      - name: Descargar codigo del repositorio
         uses: actions/checkout@v4
 
       - name: Instalar .NET 8
@@ -31,13 +32,13 @@ jobs:
       - name: Restaurar dependencias
         run: dotnet restore "${{ env.PROJECT_PATH }}"
 
-      - name: Compilar FarmaDi
+      - name: Compilar proyecto FarmaDi
         run: dotnet build "${{ env.PROJECT_PATH }}" --configuration Release --no-restore
 
-      - name: Publicar FarmaDiApi
+      - name: Publicar API FarmaDi
         run: dotnet publish "${{ env.PROJECT_PATH }}" --configuration Release --no-build --output "${{ github.workspace }}/publish"
 
-      - name: Subir archivos compilados
+      - name: Subir archivos de publicacion
         uses: actions/upload-artifact@v4
         with:
           name: farmadi-api
@@ -45,6 +46,7 @@ jobs:
           if-no-files-found: error
 
   deploy:
+    name: Desplegar FarmaDi en Azure
     runs-on: windows-latest
     needs: build
 
@@ -64,11 +66,12 @@ jobs:
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_724FDB606DE849F8A000D6A5FDBBD7BF }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F2EB8C96DC5044F1BEB1FA8B87DE67BA }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CA0C26742A3242BFA7F1623092C50960 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_FD7D17877A944E859C15D2649F15305E }}
 
-      - name: Desplegar FarmaDi en Azure
+      - name: Desplegar API en Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           slot-name: Production
           package: ./publish
+
